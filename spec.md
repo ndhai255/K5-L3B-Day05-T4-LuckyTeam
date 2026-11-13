@@ -1,6 +1,6 @@
 # Bài nộp LAB5 — T4 Thương mại điện tử · Nhóm LuckyTeam
 
-**Lớp:** L3B · **Bàn / zone:** ____ · **Track:** T4 — Trợ lý khiếu nại "hàng không đúng mô tả" (Trò chuyện với Shopee)
+**Lớp:** L3B · **Track:** T4 — Trợ lý khiếu nại "hàng không đúng mô tả" (Trò chuyện với Shopee)
 
 > Nhóm **2 người** — đã được lab coach đồng ý.
 
@@ -160,10 +160,13 @@ Quy ước hạn dùng chung (giả định của nhóm): **người bán có 48
 
 ### Nguyên tắc HAX / PAIR (mỗi cái trỏ vào chỗ cụ thể)
 
-- **G2 — Làm rõ hệ thống làm tốt đến đâu** → K5, câu đầu: *"Mình so được ảnh với mô tả lúc bạn đặt, nhưng không kiểm được giày là hàng thật hay hàng giả."*, cùng nhãn *"AI chỉ so với mô tả. AI không kiểm định thật/giả"* dưới thẻ căn cứ. Câu "Mình là trợ lý AI" ở đầu cả K4 và K5 cũng đáp ứng G1 và yêu cầu minh bạch của Luật Trí tuệ nhân tạo (Điều 11 khoản 1).
-- **G11 — Giải thích vì sao** + **PAIR Explainability & Trust** → K4, thẻ **"Căn cứ AI đã so"** đặt hai phiên bản mô tả cạnh nhau, có ngày, tô rõ bản dùng để so. Người mua (và nhân viên) tự kiểm được căn cứ, không phải tin AI.
-- **G10 — Thu hẹp phạm vi khi nghi ngờ** → K5, câu *"mình chưa đủ căn cứ để nói giày không đúng mô tả"* thay vì đoán theo hướng nào. Với tin cụt ở K2, G10 là câu hỏi lại một câu kèm nút chọn đơn.
-- **PAIR Errors & Graceful Failure** (mỗi lỗi một đường lui) → K5, hai nút **[Tôi nghi hàng giả]** / **[Gửi ảnh chỗ khác mô tả]** cùng link **[Gặp nhân viên]**: người mua không bao giờ bị kẹt ở một câu "không".
+Nhóm chọn ba nguyên tắc, mỗi cái gắn với một chỗ cụ thể ở K4 hoặc K5:
+
+1. **G11 — Giải thích vì sao** (cùng ý với PAIR Explainability & Trust) → K4, thẻ **"Căn cứ AI đã so"** đặt hai phiên bản mô tả cạnh nhau, có ngày, tô rõ bản dùng để so. Người mua (và nhân viên) tự kiểm được căn cứ, không phải tin AI. Trên prototype: ①.
+2. **G2 — Làm rõ hệ thống làm tốt đến đâu** → K5, câu đầu: *"Mình so được ảnh với mô tả lúc bạn đặt, nhưng không kiểm được giày là hàng thật hay hàng giả."*, cùng nhãn *"AI chỉ so với mô tả. AI không kiểm định thật/giả"* dưới thẻ căn cứ. Trên prototype: ③.
+3. **PAIR Errors & Graceful Failure** (mỗi lỗi một đường lui) → K5, hai nút **[Tôi nghi hàng giả]** / **[Gửi ảnh chỗ khác mô tả]** cùng link **[Gặp nhân viên]**: người mua không bao giờ bị kẹt ở một câu "không". Trên prototype: ⑤.
+
+*Ghi chú:* câu "Mình là trợ lý AI" ở đầu K4 và K5 đáp ứng yêu cầu minh bạch của Luật Trí tuệ nhân tạo (Điều 11 khoản 1). Bảng chú thích ở §5 còn gắn thêm vài nguyên tắc phụ cho một số chỗ trên prototype (④ G10, ⑦ G9, ⑩ G1); ba nguyên tắc trên là ba nguyên tắc chính của §3.
 
 ### Lỗi mà sửa câu chữ không cứu được — và thiết kế cứu thế nào
 
@@ -211,7 +214,6 @@ Mỗi người tự xếp trước, không bàn (5 phút), rồi mới so:
 | Nguyễn Đức Hải (A) | **Tự làm** khi bằng chứng rõ và người bán đã nhận lỗi | Ca rõ ràng mà bắt chờ thì vô ích: người mua đã gửi ảnh, shop đã nhận, vẫn phải chờ ai đó bấm. | **K1**: chờ là cái giá của phía "cần duyệt" |
 | Vũ Quang Hải (B) | **Cấm** với AI | AI dễ bị doạ và bị lừa. Lời người mua kể ("shop nhận rồi") không kiểm chứng được. | **K5**: hoàn là cái giá của phía "tự làm"; K1 nếu người mua nói dối |
 
-*(Nhóm điền lại đúng lựa chọn thật của mỗi người nếu khác.)*
 
 **Cái giá của mỗi phía:**
 - **Tự làm**: K5 hoàn cho người doạ, người bán đúng mất tiền. K1 hoàn trước khi hàng được trả, chỉ đúng nhờ shop nhận thật.
@@ -353,19 +355,14 @@ Ba tiêu chí Pass/Fail. Mỗi tiêu chí chấm bằng cách nhìn vào câu tr
 
 ## §7. Demo
 
-**Phân công trình bày:**
+**Ca lạ nhận được ở demo:**
 
-| Phần | Người | Nội dung |
-|---|---|---|
-| Mở đầu (30 giây) | A | Lát cắt T4; luật "tiền chỉ di chuyển khi bên mất tiền tự đồng ý, hoặc nhân viên quyết". |
-| Phía người mua | A | Bấm `index.html`: K4 (①, mô tả đã sửa) rồi K5 (③④⑤, rồi ② hoàn tác). Trả lời "chỗ nào là G__". |
-| Phía người bán & nhân viên | B | Bấm `seller.html`: ai quyết, hộp xác nhận (⑦), hai nút khoá đối xứng (⑩), ô phạt shop không có nút. Trả lời "sai thì ai mất gì". |
-| Ca lạ | Người có màn hình liên quan | Xử theo đúng bảng mức tự chủ ở §4. |
+> *"Nồi chiên giao tới bị móp một bên, nắp đóng không khít. Không đúng mô tả, hoàn tiền cho mình."* (DH-1002, mô tả lúc đặt: "Dung tích 6 lít")
 
-**Cách nhóm xử một ca lạ (chuẩn bị trước):**
-1. Có tool di chuyển tiền không? Có thì AI không bấm, chỉ soạn đề xuất; người duyệt là bên chịu thiệt hoặc nhân viên.
-2. Thiếu đơn hoặc thiếu chỗ sai? Hỏi lại một câu kèm nút chọn đơn (K2).
-3. Có lời doạ, đòi phạt shop, đòi SĐT? Không làm theo; tách lời doạ khỏi căn cứ, chuyển chuyên trách, mở chat trong app (K5, K6, K7).
-4. Hạn trả hàng còn không? Đọc từ đơn, nói ngày cụ thể (K9).
-
-**Ca lạ nhận được ở demo:** _(điền sau demo: ca là gì · prototype hoặc nhóm đã xử thế nào, theo mức nào · nhóm có đổi ý gì sau ca đó không)_
+- **Vì sao khó:** người mua gọi là "không đúng mô tả", nhưng mô tả lúc đặt không nói gì về móp hay nắp. Đây là **hàng hư hại**, nhiều khả năng do **vận chuyển**, tức có thể **cả người mua lẫn người bán đều không có lỗi**. Ca này rơi đúng vào việc **không làm #3 ở §1**. Nếu AI cứ đi theo luồng "không đúng mô tả", shop sẽ bị xin giải trình như thể bị buộc tội, và nếu nhân viên hoàn tiền thì người bán chịu một lỗi không phải của mình.
+- **Theo §1 và mức tự chủ ở §4, thiết kế xử thế này:**
+  1. `xem_don_luc_dat` (**tự làm**, người mua đã nói rõ đơn DH-1002): mô tả lúc đặt chỉ ghi "Dung tích 6 lít", không đề cập vỏ hay nắp. AI **không** kết luận "không đúng mô tả" và cũng không kết luận "đúng mô tả".
+  2. AI nói rõ đây là luồng khác và chỉ đường sang đó, **không xử trong luồng này**: *"Mình là trợ lý AI. Mô tả lúc bạn đặt chỉ ghi 'Dung tích 6 lít', không nói gì về vỏ hay nắp, nên đây không phải lỗi 'không đúng mô tả' mà là **hàng bị hư hại**, có thể do vận chuyển. Loại này được xử ở luồng riêng, vì người chịu có thể là đơn vị vận chuyển chứ không phải shop. Bạn bấm **[Báo hàng hư hại khi nhận]** bên dưới, hồ sơ sẽ được điền sẵn đơn DH-1002. Hạn yêu cầu trả hàng của đơn này: **còn 7 ngày, tới 20/11**."*
+  3. **Không tool nào của luồng này được gọi:** không `yeu_cau_bang_chung` gửi shop (shop không bị báo khiếu nại "không đúng mô tả"), không `chuyen_truong_nhom`, không tool tiền nào. Link **[Gặp nhân viên]** vẫn có như mọi màn, nếu người mua không muốn sang luồng kia.
+  4. Nếu người mua chỉ ra được một chỗ **cụ thể** khác mô tả lúc đặt (ví dụ đo lại được 5 lít), ca quay về luồng "không đúng mô tả" như K3.
+- **Nhóm đổi ý gì sau ca này:** không đổi mức tự chủ nào. Ca này cho thấy việc không làm #3 ở §1 phải là **bước đầu tiên**, chạy trước mọi tool gửi tin: AI phân loại lý do trước, và việc người mua gọi là "không đúng mô tả" không có nghĩa là đúng loại đó. Thiếu bước này thì `yeu_cau_bang_chung` sẽ gửi shop một tin buộc tội sai chỗ, dù vẫn tuân thủ đủ 4 luật ở §4. Prototype chưa có bước phân loại này; đây là việc làm tiếp.
