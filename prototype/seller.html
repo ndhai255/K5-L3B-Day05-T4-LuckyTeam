@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Người bán & Nhân viên · Trợ lý khiếu nại</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Riêng trang người bán & nhân viên (chỉ dùng biến có sẵn trong style.css) */
+  .khung-tin-ai {
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--nen);
+    border-left: 4px solid var(--nhan);
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .khung-tin-ai .tieu-de-tin {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chu-phu);
+    margin-bottom: 4px;
+  }
+  .hop-tach-rieng {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--vang-nhat);
+    border: 1px solid var(--vang);
+    color: var(--vang);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .hop-trung-lap {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--ok-nhat);
+    color: var(--ok);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .ghi-chu-nho {
+    font-size: 12px;
+    color: var(--chu-phu);
+    margin: 6px 0 0;
+  }
+  .phan-hoi-shop {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--vien);
+    background: var(--nen);
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Người bán &amp; Nhân viên xử lý khiếu nại
+    <small>Phía người bán · nhân viên sàn · prototype LuckyTeam · dữ liệu giả</small>
+  </h1>
+  <button class="chon-ca" data-ca="K4" aria-pressed="true">K4: Áo DH-1003 (mô tả đã sửa)</button>
+  <button class="chon-ca" data-ca="K5" aria-pressed="false">K5: Giày DH-1004 (người bán đúng)</button>
+  <button class="chon-ca" data-ca="K1" aria-pressed="false">K1: Áo DH-1001 (shop nhận gửi nhầm)</button>
+  <button id="nut-hien-so" aria-pressed="false">Hiện số chú thích</button>
+  <a href="index.html">← Xem phía người mua</a>
+</header>
+
+<main>
+  <!-- Cột trái: Màn hình phía Người bán (Shop) -->
+  <div class="cot">
+    <section class="khoi" id="khoi-nguoi-ban">
+      <h2 id="tieu-de-shop">Phía Người bán (Kênh Người Bán)</h2>
+      <div class="noi-dung" id="noi-dung-shop"></div>
+      <div class="hanh-dong" id="hanh-dong-shop"></div>
+    </section>
+
+    <section class="khoi">
+      <h2>Trạng thái hồ sơ (đồng bộ 2 phía)</h2>
+      <ol class="trang-thai" id="trang-thai"></ol>
+      <div class="dong-han" id="dong-han"></div>
+    </section>
+  </div>
+
+  <!-- Cột phải: Màn hình phía Nhân viên xử lý khiếu nại / Bộ phận kiểm định -->
+  <div class="cot">
+    <section class="khoi" id="khoi-nhan-vien">
+      <h2 id="tieu-de-nv">Phía Nhân viên xử lý khiếu nại / Kiểm định</h2>
+      <div class="noi-dung" id="noi-dung-nv"></div>
+      <div class="hanh-dong" id="hanh-dong-nv"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Hộp xác nhận dùng chung cho mọi hành động "cần người duyệt" (di chuyển tiền) -->
+<dialog class="hop-xac-nhan" id="xac-nhan">
+  <h3 id="xn-tieu-de">Xác nhận hành động</h3>
+  <div class="noi-dung" id="xn-noi-dung"></div>
+  <div class="hang-nut">
+    <button class="nut-phu" value="huy">Huỷ</button>
+    <button class="nut-nguy-hiem" value="ok" id="xn-nut-ok">Xác nhận thực hiện</button>
+  </div>
+</dialog>
+
+<script src="data.js"></script>
+<script src="chung.js"></script>
+<script>
+  let caHienTai = "K4";
+  // Trạng thái tương tác trong từng ca
+  let trangThaiCa = {
+    shopDaPhanHoi: false,
+    quaHan48h: false,
+    nguoiMuaHoanTac: false,
+    daKetLuan: null, // null | "hoan_tien" | "dong_khieu_nai"
+  };
+
+  function chonCa(ca) {
+    caHienTai = ca;
+    trangThaiCa = {
+      shopDaPhanHoi: false,
+      quaHan48h: false,
+      nguoiMuaHoanTac: false,
+      daKetLuan: null,
+    };
+    document.querySelectorAll(".chon-ca").forEach((b) =>
+      b.setAttribute("aria-pressed", b.dataset.ca === ca)
+    );
+    veManHinh();
+  }
+
+  function veManHinh() {
+    if (caHienTai === "K4") veK4();
+    else if (caHienTai === "K5") veK5();
+    else veK1();
+  }
+
+  // =====================================================================
+  // K4 — Mô tả đã bị sửa sau khi bán (DH-1003)
+  // =====================================================================
+  function veK4() {
+    const don = DON["DH-1003"];
+    const tin = TIN.K4;
+
+    $("tieu-de-shop").textContent = `Phía Người bán · Đơn DH-1003 · ${don.sp}`;
+    $("tieu-de-nv").textContent = `Phía Nhân viên xử lý khiếu nại · Hồ sơ DH-1003`;
+
+    // --- 1. CỘT TRÁI: PHÍA NGƯỜI BÁN ---
+    $("noi-dung-shop").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-vang">Đang chờ shop giải trình</span>
+        <span class="nhan nhan-xam">Giá trị đơn: ${tienVND(don.gia)} (đang tạm giữ tại sàn)</span>
+      </div>
+
+      <div data-badge="⑥">
+        <div class="dong-ho" style="margin-bottom:8px">
+          ⏱ Còn <b>${trangThaiCa.quaHan48h ? "00:00 (Đã quá hạn)" : "47:12"}</b> để phản hồi · hạn <b>${don.hanShopPhanHoi}</b>
+        </div>
+        <div class="khung-tin-ai">
+          <div class="tieu-de-tin">🤖 Thông báo từ Trợ lý AI (yeu_cau_bang_chung — Tự làm kèm 4 luật)</div>
+          <div>${tin.guiNguoiBan}</div>
+        </div>
+      </div>
+
+      <div class="bang-chung">
+        <span>🖼 Bằng chứng người mua: ${don.bangChungNguoiMua}</span>
+        <span class="nhan nhan-xam">Ẩn SĐT &amp; địa chỉ người mua (K7)</span>
+      </div>
+
+      <div class="phan-hoi-shop" id="khung-shop-k4">
+        ${trangThaiCa.shopDaPhanHoi
+          ? `<b>✓ Shop đã gửi giải trình:</b> "Lô hàng mới về ngày 04/11 đổi sang vải pha 65/35, nhân viên kho xuất nhầm lô mới cho đơn đặt ngày 02/11."`
+          : trangThaiCa.quaHan48h
+          ? `<b style="color:var(--do)">⚠ Đã quá hạn 48 giờ:</b> Shop không phản hồi. Hồ sơ chuyển nhân viên quyết định (AI <b>không</b> tự động hoàn tiền).`
+          : `<b>Cần gửi cụ thể:</b> (1) Lý do sửa mô tả ngày 05/11 · (2) Ảnh chụp tag lô hàng xuất ngày 07/11.`
+        }
+      </div>
+    `;
+
+    const hdShop = $("hanh-dong-shop");
+    hdShop.innerHTML = "";
+    if (!trangThaiCa.daKetLuan) {
+      const hang = document.createElement("div");
+      hang.className = "hang-nut";
+      hang.setAttribute("data-badge", "⑦");
+      hang.innerHTML = `
+        <button class="nut-chinh" id="nut-shop-gui-k4" ${trangThaiCa.shopDaPhanHoi ? "disabled" : ""}>
+          ${trangThaiCa.shopDaPhanHoi ? "✓ Đã gửi giải trình" : "Gửi giải trình & ảnh lô hàng"}
+        </button>
+        <button class="nut-nguy-hiem" id="nut-shop-dong-y-k4">
+          Đồng ý trả hàng / hoàn tiền ${tienVND(don.gia)}
+        </button>
+        <button class="nut-phu" id="nut-gia-lap-48h" ${trangThaiCa.shopDaPhanHoi || trangThaiCa.quaHan48h ? "disabled" : ""}>
+          Giả lập: Quá 48h shop im lặng
+        </button>
+      `;
+      hdShop.appendChild(hang);
+
+      $("nut-shop-gui-k4").onclick = () => {
+        trangThaiCa.shopDaPhanHoi = true;
+        veManHinh();
+      };
+      $("nut-shop-dong-y-k4").onclick = () => xacNhanHoanTien("Người bán (Shop)", "DH-1003", don.gia,
+        `Bản chụp lúc đặt (02/11) ghi "${don.moTaLucDat}", ảnh tag khách nhận ghi "${don.moTaHienTai}". Tiền chỉ đi sau khi bạn xác nhận.`);
+      $("nut-gia-lap-48h").onclick = () => {
+        trangThaiCa.quaHan48h = true;
+        veManHinh();
+      };
+    } else {
+      hdShop.appendChild(taoChip(
+        trangThaiCa.daKetLuan === "hoan_tien"
+          ? `✓ Đã duyệt hoàn tiền ${tienVND(don.gia)} cho người mua`
+          : `✓ Khiếu nại đã đóng — giải ngân ${tienVND(don.gia)} cho shop`,
+        { loai: "ok", phu: "Quyết định đã thực thi sau bước xác nhận" }
+      ));
+    }
+
+    // --- 2. CỘT PHẢI: PHÍA NHÂN VIÊN ---
+    $("noi-dung-nv").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-do">⚠ ${don.nhanHoSo} (${don.ngaySua})</span>
+        <span class="nhan nhan-xam">chuyen_truong_nhom: Tự làm (Bắt buộc chuyển)</span>
+      </div>
+
+      <div data-badge="⑧">
+        <div class="hai-cot">
+          <div class="phien-ban dung-de-so">
+            <div class="pb-tieu-de">Lúc khách đặt · ${don.ngayDat}
+              <span class="nhan nhan-xanh">bản dùng để so</span>
+            </div>
+            <div class="pb-noi-dung">${don.moTaLucDat}</div>
+          </div>
+          <div class="phien-ban">
+            <div class="pb-tieu-de">Hiện tại · shop sửa ${don.ngaySua}</div>
+            <div class="pb-noi-dung">${don.moTaHienTai}</div>
+          </div>
+        </div>
+        <div class="hop-trung-lap">
+          ⚖ Không hiển thị đề xuất "Nên hoàn" hay "Nên từ chối" của AI để tránh thiên kiến tự động hoá (automation bias). Nhân viên tự xét trên bằng chứng 2 phía.
+        </div>
+      </div>
+
+      <div class="bang-chung">
+        <span>🖼 Người mua (${don.ngayGiao}): ${don.bangChungNguoiMua}</span>
+        <span class="nhan nhan-xanh">Khác bản lúc đặt</span>
+      </div>
+
+      <div class="bang-chung">
+        <span>🏪 Người bán: ${
+          trangThaiCa.shopDaPhanHoi
+            ? "Đã gửi giải trình (nhận xuất nhầm lô vải pha 65/35)"
+            : trangThaiCa.quaHan48h
+            ? "Quá hạn 48 giờ không phản hồi"
+            : "Đang chờ phản hồi (hạn " + don.hanShopPhanHoi + ")"
+        }</span>
+        <span class="nhan ${trangThaiCa.shopDaPhanHoi ? "nhan-xanh" : "nhan-vang"}">
+          ${trangThaiCa.shopDaPhanHoi ? "Đã nghe 2 bên ✓" : trangThaiCa.quaHan48h ? "Hết hạn 48h" : "Chờ đủ 48h"}
+        </span>
+      </div>
+    `;
+
+    veNutNhanVien("DH-1003", don.gia, trangThaiCa.shopDaPhanHoi || trangThaiCa.quaHan48h);
+
+    // --- 3. THANH TRẠNG THÁI ---
+    if (trangThaiCa.daKetLuan) {
+      veTrangThai($("trang-thai"), 4, {
+        chiTiet: { 4: trangThaiCa.daKetLuan === "hoan_tien" ? "Đã hoàn tiền" : "Đã đóng khiếu nại" },
+      });
+    } else if (trangThaiCa.shopDaPhanHoi || trangThaiCa.quaHan48h) {
+      veTrangThai($("trang-thai"), 3, {
+        chiTiet: { 3: trangThaiCa.shopDaPhanHoi ? "shop đã giải trình" : "quá hạn 48h", 4: "chờ nhân viên bấm quyết" },
+      });
+    } else {
+      veTrangThai($("trang-thai"), 1, {
+        chiTiet: { 2: "nhận trong 24h", 3: `hạn ${don.hanShopPhanHoi}` },
+      });
+    }
+    $("dong-han").className = "dong-han duoc-giu";
+    $("dong-han").textContent = `Hạn trả hàng ${don.hanTra}: được giữ theo ngày mở hồ sơ (${HOM_NAY}).`;
+  }
+
+  // =====================================================================
+  // K5 — Người bán đúng, người mua doạ bóc phốt (DH-1004)
+  // =====================================================================
+  function veK5() {
+    const don = DON["DH-1004"];
+    const tin = TIN.K5;
+
+    $("tieu-de-shop").textContent = `Phía Người bán · Đơn DH-1004 · ${don.sp}`;
+    $("tieu-de-nv").textContent = `Phía Bộ phận kiểm định / Nhân viên · Hồ sơ DH-1004`;
+
+    // --- 1. CỘT TRÁI: PHÍA NGƯỜI BÁN ---
+    $("noi-dung-shop").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-xanh">✓ Ảnh khách gửi khớp 4/4 mục mô tả lúc đặt</span>
+        <span class="nhan nhan-vang">Yêu cầu kiểm định hàng chính hãng</span>
+      </div>
+
+      <div data-badge="⑥">
+        <div class="dong-ho" style="margin-bottom:8px">
+          ⏱ Còn <b>${trangThaiCa.nguoiMuaHoanTac ? "— (Đã huỷ yêu cầu)" : "47:50"}</b> · hạn gửi chứng từ <b>${don.hanShopPhanHoi}</b>
+        </div>
+        <div class="khung-tin-ai">
+          <div class="tieu-de-tin">🤖 Thông báo từ Trợ lý AI (yeu_cau_bang_chung — Tự làm kèm 4 luật)</div>
+          <div>${trangThaiCa.nguoiMuaHoanTac ? `<b>[TIN HUỶ]:</b> ${tin.tinHuyNguoiBan}` : tin.guiNguoiBan}</div>
+        </div>
+      </div>
+
+      <div class="phan-hoi-shop">
+        ${trangThaiCa.nguoiMuaHoanTac
+          ? `<b>✓ Người mua đã bấm [Hoàn tác] bên màn hình người mua:</b> Shop nhận được tin báo huỷ ngay lập tức, không phải chuẩn bị giấy tờ vô ích.`
+          : trangThaiCa.shopDaPhanHoi
+          ? `<b>✓ Shop đã tải lên:</b> Hoá đơn VAT lô giày Kavi #KV-2026-88 và Giấy chứng nhận đại lý uỷ quyền.`
+          : `<b>Bảo vệ người bán đúng:</b> Dù khách nhắn lời doạ đăng group bóc phốt, AI <b>không tự hoàn tiền</b> và <b>không phạt shop</b>. Shop chỉ cần tải lên hoá đơn nhập hàng hoặc giấy uỷ quyền.`
+        }
+      </div>
+    `;
+
+    const hdShop = $("hanh-dong-shop");
+    hdShop.innerHTML = "";
+    if (!trangThaiCa.daKetLuan) {
+      const hang = document.createElement("div");
+      hang.className = "hang-nut";
+      hang.setAttribute("data-badge", "⑦");
+      hang.innerHTML = `
+        <button class="nut-chinh" id="nut-shop-chung-tu" ${trangThaiCa.shopDaPhanHoi || trangThaiCa.nguoiMuaHoanTac ? "disabled" : ""}>
+          ${trangThaiCa.shopDaPhanHoi ? "✓ Đã gửi hoá đơn & giấy uỷ quyền" : "Gửi hoá đơn nhập hàng / giấy uỷ quyền"}
+        </button>
+        <button class="nut-phu" id="nut-gia-lap-hoan-tac">
+          ${trangThaiCa.nguoiMuaHoanTac ? "Khôi phục yêu cầu kiểm định" : "Giả lập: Người mua bấm [Hoàn tác] (màn A)"}
+        </button>
+      `;
+      hdShop.appendChild(hang);
+
+      $("nut-shop-chung-tu").onclick = () => {
+        trangThaiCa.shopDaPhanHoi = true;
+        veManHinh();
+      };
+      $("nut-gia-lap-hoan-tac").onclick = () => {
+        trangThaiCa.nguoiMuaHoanTac = !trangThaiCa.nguoiMuaHoanTac;
+        veManHinh();
+      };
+    } else {
+      hdShop.appendChild(taoChip(
+        trangThaiCa.daKetLuan === "hoan_tien"
+          ? `✓ Đã duyệt hoàn tiền ${tienVND(don.gia)} cho người mua`
+          : `✓ Đã đóng khiếu nại — bảo vệ shop đúng, giải ngân ${tienVND(don.gia)}`,
+        { loai: "ok", phu: "Đã xác nhận qua hộp thoại kiểm tra căn cứ" }
+      ));
+    }
+
+    // --- 2. CỘT PHẢI: PHÍA NHÂN VIÊN / BỘ PHẬN KIỂM ĐỊNH ---
+    const dongSoSanh = don.soSanh.map(([muc, khop]) =>
+      `<tr><td>${muc}</td><td class="${khop ? "khop" : "khong-khop"}">${khop ? "✓ Khớp mô tả lúc đặt" : "✗ Khác"}</td></tr>`
+    ).join("");
+
+    $("noi-dung-nv").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-vang">🔍 ${don.nhanHoSo} (chuyên trách)</span>
+        <span class="nhan nhan-xam">So với mô tả lúc đặt · ${don.ngayDat}</span>
+      </div>
+
+      <table class="bang-so">
+        ${dongSoSanh}
+        <tr><td>${don.khongDeCap}</td><td class="khong-de-cap">— Mô tả không đề cập</td></tr>
+      </table>
+
+      <div class="gioi-han">${tin.nhanGioiHan}</div>
+
+      <div class="hop-tach-rieng" data-badge="⑨">
+        ⚠ ${don.ghiChuLoiDoa} — Trợ lý đã tách riêng câu <i>"Không hoàn tiền thì mình đăng group review bóc phốt shop luôn"</i> khỏi khung căn cứ để người duyệt không bị kéo theo.
+      </div>
+
+      <div class="bang-chung">
+        <span>🏪 Chứng từ của shop: ${
+          trangThaiCa.shopDaPhanHoi
+            ? "Hoá đơn VAT #KV-2026-88 + Giấy uỷ quyền phân phối chính hãng ✓"
+            : "Đang chờ shop gửi (hạn " + don.hanShopPhanHoi + ")"
+        }</span>
+        <span class="nhan ${trangThaiCa.shopDaPhanHoi ? "nhan-xanh" : "nhan-vang"}">
+          ${trangThaiCa.shopDaPhanHoi ? "Đã có chứng từ ✓" : "Đang chờ"}
+        </span>
+      </div>
+    `;
+
+    veNutNhanVien("DH-1004", don.gia, trangThaiCa.shopDaPhanHoi && !trangThaiCa.nguoiMuaHoanTac);
+
+    // --- 3. THANH TRẠNG THÁI ---
+    if (trangThaiCa.daKetLuan) {
+      veTrangThai($("trang-thai"), 4, {
+        chiTiet: { 4: trangThaiCa.daKetLuan === "hoan_tien" ? "Đã hoàn tiền" : "Shop đúng — Đóng khiếu nại" },
+      });
+    } else if (trangThaiCa.nguoiMuaHoanTac) {
+      veTrangThai($("trang-thai"), 1, { dang: false, chiTiet: { 1: "người mua đã hoàn tác chuyển kiểm định" } });
+    } else if (trangThaiCa.shopDaPhanHoi) {
+      veTrangThai($("trang-thai"), 3, {
+        chiTiet: { 3: "shop đã nộp hoá đơn chính hãng", 4: "chờ kiểm định viên bấm quyết" },
+      });
+    } else {
+      veTrangThai($("trang-thai"), 1, {
+        chiTiet: { 2: "bộ phận kiểm định, trong 24h", 3: `hạn ${don.hanShopPhanHoi}` },
+      });
+    }
+    $("dong-han").className = "dong-han";
+    $("dong-han").textContent = `Hạn yêu cầu trả hàng: còn ${don.conNgay} ngày, tới ${don.hanTra}.`;
+  }
+
+  // =====================================================================
+  // K1 — Ca bình thường: shop gửi nhầm size M thay vì L (DH-1001)
+  // =====================================================================
+  function veK1() {
+    const don = DON["DH-1001"];
+
+    $("tieu-de-shop").textContent = `Phía Người bán · Đơn DH-1001 · ${don.sp} (Ca bình thường)`;
+    $("tieu-de-nv").textContent = `Phía Nhân viên · Đơn DH-1001 (Không cần can thiệp nếu shop đồng ý)`;
+
+    $("noi-dung-shop").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-xanh">soan_de_xuat_hoan_tien: AI đã soạn sẵn hồ sơ</span>
+        <span class="nhan nhan-vang">thuc_hien_hoan_tien: Cần người bán bấm duyệt</span>
+      </div>
+
+      <div data-badge="⑥">
+        <div class="dong-ho" style="margin-bottom:8px">
+          ⏱ Còn <b>47:55</b> để xác nhận yêu cầu trả hàng / hoàn tiền
+        </div>
+        <div class="khung-tin-ai">
+          <div class="tieu-de-tin">🤖 Hồ sơ đề xuất do AI soạn sẵn (chưa có tiền nào đi)</div>
+          <div>
+            <b>Lý do điền sẵn:</b> ${don.lyDoDienSan}<br>
+            <b>Mô tả lúc đặt:</b> "${don.moTaLucDat}"<br>
+            <b>Bằng chứng người mua:</b> ${don.bangChungNguoiMua}<br>
+            <i>Lưu ý: Lời người mua kể "shop đã nhận lỗi trong chat" không tự kích hoạt hoàn tiền; tiền chỉ hoàn khi Shop bấm xác nhận bên dưới.</i>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const hdShop = $("hanh-dong-shop");
+    hdShop.innerHTML = "";
+    if (!trangThaiCa.daKetLuan) {
+      const hang = document.createElement("div");
+      hang.className = "hang-nut";
+      hang.setAttribute("data-badge", "⑦");
+      hang.innerHTML = `
+        <button class="nut-nguy-hiem" id="nut-shop-dong-y-k1">
+          Đồng ý trả hàng / hoàn tiền ${tienVND(don.gia)}
+        </button>
+        <button class="nut-phu" id="nut-shop-khieu-nai-k1">
+          Không đồng ý → gửi giải trình cho nhân viên
+        </button>
+      `;
+      hdShop.appendChild(hang);
+
+      $("nut-shop-dong-y-k1").onclick = () => xacNhanHoanTien(
+        "Người bán (Shop)", "DH-1001", don.gia,
+        `Mô tả lúc đặt ghi "${don.moTaLucDat}", ảnh tag người mua gửi là "${don.bangChungNguoiMua}". Khi bạn bấm Xác nhận, yêu cầu trả hàng/hoàn tiền được duyệt ngay mà không cần chờ nhân viên sàn.`
+      );
+      $("nut-shop-khieu-nai-k1").onclick = () => {
+        trangThaiCa.shopDaPhanHoi = true;
+        veManHinh();
+      };
+    } else {
+      hdShop.appendChild(taoChip(
+        `✓ Shop đã đồng ý hoàn tiền ${tienVND(don.gia)} — Xong ngay không cần nhân viên`,
+        { loai: "ok", phu: "Giữ được tốc độ 1 chạm ở ca rõ ràng mà vẫn an toàn" }
+      ));
+    }
+
+    $("noi-dung-nv").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-xam">Hàng đợi nhân viên</span>
+      </div>
+      <div class="hop-trung-lap" data-badge="⑧">
+        ✓ Ở ca bình thường (K1), AI tự soạn đề xuất (<code>soan_de_xuat_hoan_tien</code>) và chuyển nút duyệt cho <b>bên chịu mất tiền (Người bán)</b>. Nhờ tách tool, nhân viên không bị ngập bởi các ca hiển nhiên.
+      </div>
+    `;
+
+    veNutNhanVien("DH-1001", don.gia, trangThaiCa.shopDaPhanHoi);
+    veTrangThai($("trang-thai"), trangThaiCa.daKetLuan ? 4 : 1, {
+      chiTiet: { 1: "AI đã điền sẵn lý do Giao sai size" },
+    });
+    $("dong-han").className = "dong-han";
+    $("dong-han").textContent = `Hạn yêu cầu trả hàng: còn ${don.conNgay} ngày, tới ${don.hanTra}.`;
+  }
+
+  // =====================================================================
+  // Cụm nút phán quyết đối xứng của Nhân viên + Ô báo việc bị cấm (Badge ⑩)
+  // =====================================================================
+  function veNutNhanVien(maDon, gia, choPhepDongKhieuNai) {
+    const hdNv = $("hanh-dong-nv");
+    hdNv.innerHTML = "";
+
+    const khoi10 = document.createElement("div");
+    khoi10.setAttribute("data-badge", "⑩");
+    khoi10.style.display = "flex";
+    khoi10.style.flexDirection = "column";
+    khoi10.style.gap = "8px";
+
+    if (!trangThaiCa.daKetLuan) {
+      const hang = document.createElement("div");
+      hang.className = "hang-nut";
+      hang.innerHTML = `
+        <button class="nut-nguy-hiem" id="nv-hoan-tien">
+          Duyệt hoàn tiền cho người mua (${tienVND(gia)})
+        </button>
+        <button class="nut-nguy-hiem" id="nv-dong-kn" ${choPhepDongKhieuNai ? "" : "disabled"}
+          title="${choPhepDongKhieuNai ? "" : "Chỉ mở sau khi shop đã phản hồi hoặc hết hạn 48 giờ"}">
+          Đóng khiếu nại — trả tiền cho shop (${tienVND(gia)})
+        </button>
+      `;
+      khoi10.appendChild(hang);
+
+      if (!choPhepDongKhieuNai) {
+        const chuThich = document.createElement("p");
+        chuThich.className = "ghi-chu-nho";
+        chuThich.textContent = "🔒 Nút [Đóng khiếu nại] đang khoá: phải nghe phản hồi của shop (hoặc hết hạn 48h) trước khi đóng khiếu nại.";
+        khoi10.appendChild(chuThich);
+      }
+    } else {
+      khoi10.appendChild(taoChip(
+        trangThaiCa.daKetLuan === "hoan_tien"
+          ? `✓ Đã thực hiện thuc_hien_hoan_tien (${tienVND(gia)} về người mua)`
+          : `✓ Đã thực hiện tu_choi_khieu_nai (${tienVND(gia)} giải ngân cho shop)`,
+        { loai: "ok", phu: "Đã qua bước người có thẩm quyền xác nhận" }
+      ));
+    }
+
+    const cam = document.createElement("div");
+    cam.className = "khong-co-nut";
+    cam.textContent = "🚫 Phạt / khoá shop (phat_shop): CẤM trong luồng khiếu nại — không có nút thực hiện; hồ sơ nghi hàng giả chỉ chuyển bộ phận chuyên trách.";
+    khoi10.appendChild(cam);
+
+    hdNv.appendChild(khoi10);
+
+    if (!trangThaiCa.daKetLuan) {
+      $("nv-hoan-tien").onclick = () => xacNhanHoanTien(
+        "Nhân viên xử lý khiếu nại", maDon, gia,
+        `Bạn đang duyệt hoàn tiền đơn ${maDon} cho người mua. Tiền (${tienVND(gia)}) sẽ chuyển về người mua và không đảo lại được.`
+      );
+      $("nv-dong-kn").onclick = () => xacNhanDongKhieuNai(maDon, gia);
+    }
+  }
+
+  // ---------- Hộp xác nhận trước khi di chuyển tiền ----------
+  async function xacNhanHoanTien(nguoiDuyet, maDon, gia, tomTatCanCu) {
+    const don = DON[maDon];
+    $("xn-tieu-de").textContent = `Xác nhận hoàn tiền ${tienVND(gia)} (Đơn ${maDon})?`;
+    $("xn-noi-dung").innerHTML = `
+      <p><b>Người duyệt:</b> ${nguoiDuyet}</p>
+      <p><b>Tool thực thi:</b> <code>thuc_hien_hoan_tien</code> (Mức tự chủ: <b>Cần người duyệt</b> — bên mất tiền hoặc nhân viên)</p>
+      <p><b>Mô tả lúc đặt:</b> ${don.moTaLucDat}</p>
+      <p><b>Bằng chứng người mua:</b> ${don.bangChungNguoiMua}</p>
+      <p>${tomTatCanCu}</p>
+      <p style="color:var(--do);font-weight:600;margin-bottom:0">⚠ Hành động này di chuyển tiền thật (${tienVND(gia)}) và khó đảo lại.</p>
+    `;
+    $("xn-nut-ok").textContent = `Xác nhận hoàn ${tienVND(gia)}`;
+    const dongY = await moHopXacNhan($("xac-nhan"));
+    if (dongY) {
+      trangThaiCa.daKetLuan = "hoan_tien";
+      veManHinh();
+    }
+  }
+
+  async function xacNhanDongKhieuNai(maDon, gia) {
+    const don = DON[maDon];
+    $("xn-tieu-de").textContent = `Xác nhận đóng khiếu nại đơn ${maDon}?`;
+    $("xn-noi-dung").innerHTML = `
+      <p><b>Người duyệt:</b> Nhân viên xử lý khiếu nại / Kiểm định</p>
+      <p><b>Tool thực thi:</b> <code>tu_choi_khieu_nai</code> (Mức tự chủ: <b>Cần người duyệt</b> — AI không bao giờ tự đóng)</p>
+      <p><b>Căn cứ đã kiểm:</b> Mô tả lúc đặt ("${don.moTaLucDat}") và chứng từ giải trình của người bán.</p>
+      <p style="color:var(--do);font-weight:600;margin-bottom:0">⚠ Đóng khiếu nại sẽ giải ngân ${tienVND(gia)} về cho người bán và không đảo lại được.</p>
+    `;
+    $("xn-nut-ok").textContent = `Xác nhận đóng khiếu nại`;
+    const dongY = await moHopXacNhan($("xac-nhan"));
+    if (dongY) {
+      trangThaiCa.daKetLuan = "dong_khieu_nai";
+      veManHinh();
+    }
+  }
+
+  document.querySelectorAll(".chon-ca").forEach((b) =>
+    b.addEventListener("click", () => chonCa(b.dataset.ca))
+  );
+  batNutHienSo($("nut-hien-so"));
+
+  const params = new URLSearchParams(location.search);
+  const caUrl = params.get("ca");
+  chonCa(caUrl === "K5" || caUrl === "K1" ? caUrl : "K4");
+  if (params.get("so") === "1") {
+    document.body.classList.add("hien-so");
+    $("nut-hien-so").setAttribute("aria-pressed", "true");
+  }
+  if (params.get("xacnhan") === "1") {
+    xacNhanHoanTien(
+      "Người bán (Shop)", "DH-1001", DON["DH-1001"].gia,
+      `Mô tả lúc đặt ghi "${DON["DH-1001"].moTaLucDat}", ảnh tag người mua gửi là "${DON["DH-1001"].bangChungNguoiMua}". Khi bạn bấm Xác nhận, yêu cầu trả hàng/hoàn tiền được duyệt ngay mà không cần chờ nhân viên sàn.`
+    );
+  }
+</script>
+</body>
+</html>
