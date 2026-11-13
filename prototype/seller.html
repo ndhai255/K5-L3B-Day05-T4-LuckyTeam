@@ -243,7 +243,7 @@
 
       <div class="bang-chung">
         <span>🖼 Người mua (${don.ngayGiao}): ${don.bangChungNguoiMua}</span>
-        <span class="nhan nhan-xanh">Khác bản lúc đặt</span>
+        <span class="nhan nhan-do">Khác bản lúc đặt</span>
       </div>
 
       <div class="bang-chung">
@@ -472,7 +472,7 @@
       <div class="khoi-dau">
         <span class="nhan nhan-xam">Hàng đợi nhân viên</span>
       </div>
-      <div class="hop-trung-lap" data-badge="⑧">
+      <div class="hop-trung-lap">
         ✓ Ở ca bình thường (K1), AI tự soạn đề xuất (<code>soan_de_xuat_hoan_tien</code>) và chuyển nút duyệt cho <b>bên chịu mất tiền (Người bán)</b>. Nhờ tách tool, nhân viên không bị ngập bởi các ca hiển nhiên.
       </div>
     `;
@@ -488,7 +488,10 @@
   // =====================================================================
   // Cụm nút phán quyết đối xứng của Nhân viên + Ô báo việc bị cấm (Badge ⑩)
   // =====================================================================
-  function veNutNhanVien(maDon, gia, choPhepDongKhieuNai) {
+  // daNgheHaiBen: shop đã phản hồi hoặc đã quá hạn 48h.
+  // Hai nút di chuyển tiền khoá/mở CÙNG điều kiện — đối xứng, đúng luật §4
+  // và rubric riêng #3 "người bán có thời hạn phản hồi trước khi quyết".
+  function veNutNhanVien(maDon, gia, daNgheHaiBen) {
     const hdNv = $("hanh-dong-nv");
     hdNv.innerHTML = "";
 
@@ -502,20 +505,21 @@
       const hang = document.createElement("div");
       hang.className = "hang-nut";
       hang.innerHTML = `
-        <button class="nut-nguy-hiem" id="nv-hoan-tien">
+        <button class="nut-nguy-hiem" id="nv-hoan-tien" ${daNgheHaiBen ? "" : "disabled"}
+          title="${daNgheHaiBen ? "" : "Chỉ mở sau khi shop đã phản hồi hoặc hết hạn 48 giờ"}">
           Duyệt hoàn tiền cho người mua (${tienVND(gia)})
         </button>
-        <button class="nut-nguy-hiem" id="nv-dong-kn" ${choPhepDongKhieuNai ? "" : "disabled"}
-          title="${choPhepDongKhieuNai ? "" : "Chỉ mở sau khi shop đã phản hồi hoặc hết hạn 48 giờ"}">
+        <button class="nut-nguy-hiem" id="nv-dong-kn" ${daNgheHaiBen ? "" : "disabled"}
+          title="${daNgheHaiBen ? "" : "Chỉ mở sau khi shop đã phản hồi hoặc hết hạn 48 giờ"}">
           Đóng khiếu nại — trả tiền cho shop (${tienVND(gia)})
         </button>
       `;
       khoi10.appendChild(hang);
 
-      if (!choPhepDongKhieuNai) {
+      if (!daNgheHaiBen) {
         const chuThich = document.createElement("p");
         chuThich.className = "ghi-chu-nho";
-        chuThich.textContent = "🔒 Nút [Đóng khiếu nại] đang khoá: phải nghe phản hồi của shop (hoặc hết hạn 48h) trước khi đóng khiếu nại.";
+        chuThich.textContent = "🔒 Cả hai nút đang khoá: phải nghe phản hồi của shop (hoặc hết hạn 48h) trước khi quyết theo hướng nào. Trong lúc chờ, tiền giữ ở sàn, không về bên nào.";
         khoi10.appendChild(chuThich);
       }
     } else {
