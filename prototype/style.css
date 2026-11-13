@@ -1,0 +1,270 @@
+/* =====================================================================
+   GIAO DIỆN CHUNG — dùng cho cả index.html (người mua, A) và seller.html (người bán & nhân viên, B)
+   Chủ file: A. Đã chốt — muốn thêm hay đổi class thì báo A, không tự sửa.
+
+   Cách nạp trong <head>:
+     <link rel="stylesheet" href="style.css">
+   và cuối <body>:
+     <script src="data.js"></script>
+     <script src="chung.js"></script>
+
+   ---------------------------------------------------------------------
+   KHUNG TRANG
+     <header>
+       <h1>Tiêu đề <small>Phụ đề</small></h1>
+       <button class="chon-ca" aria-pressed="true">K4 …</button>
+       <button id="nut-hien-so" aria-pressed="false">Hiện số chú thích</button>
+       <a href="index.html">← Xem phía người mua</a>
+     </header>
+     <main> … hai cột … </main>          (tự xuống một cột khi màn hẹp)
+     <section class="khoi"><h2>Tên khối</h2><div class="noi-dung">…</div></section>
+
+   NÚT
+     <button class="nut-chinh">  hành động chính (màu nhấn)
+     <button class="nut-phu">    hành động phụ (viền)
+     <button class="lien-ket">   trông như link, ví dụ [Gặp nhân viên]
+     <button class="nut-nguy-hiem">  hành động di chuyển tiền (chỉ B dùng, luôn kèm hộp xác nhận)
+
+   NHÃN (tag nhỏ)
+     <span class="nhan nhan-do">⚠ Mô tả sửa sau khi bán</span>   cảnh báo, hồ sơ cần người xét
+     <span class="nhan nhan-vang">Nghi hàng giả</span>          lưu ý
+     <span class="nhan nhan-xanh">✓ Khớp</span>                  khớp / đã xong
+     <span class="nhan nhan-xam">Không đề cập</span>             trung tính
+
+   CHIP — kết quả của một việc AI đã tự làm
+     <div class="chip chip-ok"><span>✓ Đã chuyển nhân viên</span> <button class="lien-ket">Hoàn tác</button></div>
+     <div class="chip chip-cho"><span>⏳ Shop đang phản hồi · hạn 15/11 14:00</span></div>
+
+   THẺ "CĂN CỨ AI ĐÃ SO"
+     So hai phiên bản mô tả (K4):
+       <div class="hai-cot">
+         <div class="phien-ban dung-de-so"><div class="pb-tieu-de">Lúc bạn đặt · 02/11 <span class="nhan nhan-xanh">bản dùng để so</span></div><div class="pb-noi-dung">…</div></div>
+         <div class="phien-ban"><div class="pb-tieu-de">Hiện tại · sửa 05/11</div><div class="pb-noi-dung">…</div></div>
+       </div>
+     Bảng so từng mục (K5):
+       <table class="bang-so"><tr><td>Hộp</td><td class="khop">✓ Khớp</td></tr>
+                              <tr><td>Form</td><td class="khong-de-cap">— Mô tả không đề cập</td></tr></table>
+     Nhãn giới hạn của AI (G2):
+       <div class="gioi-han">AI chỉ so với mô tả. AI không kiểm định thật/giả.</div>
+     Bằng chứng một bên đã gửi:
+       <div class="bang-chung">🖼 Ảnh tag … <span class="nhan nhan-xanh">Bằng chứng bạn đã gửi ✓</span></div>
+
+   VIỆC BỊ CẤM — chỉ có chữ, KHÔNG có nút
+     <div class="khong-co-nut">🚫 Phạt shop: không thuộc luồng này → chuyển bộ phận chuyên trách</div>
+
+   ĐỒNG HỒ HẠN (B dùng cho hạn 48h của shop)
+     <div class="dong-ho">⏱ Còn <b>47:12</b> để phản hồi · hạn 15/11 14:00</div>
+
+   HỘP XÁC NHẬN — cho mọi việc "cần người duyệt" (B dùng)
+     <dialog class="hop-xac-nhan" id="xac-nhan">
+       <h3>Xác nhận hoàn tiền 189.000đ?</h3>
+       <div class="noi-dung">… mô tả lúc đặt, ảnh, số tiền …</div>
+       <div class="hang-nut"><button class="nut-phu" value="huy">Huỷ</button><button class="nut-nguy-hiem" value="ok">Xác nhận</button></div>
+     </dialog>
+     Mở bằng: moHopXacNhan(document.getElementById("xac-nhan")).then(dongY => …)   (xem chung.js)
+
+   THANH TRẠNG THÁI
+     <ol class="trang-thai" id="trang-thai"></ol>  → vẽ bằng veTrangThai(…) trong chung.js
+
+   SỐ CHÚ THÍCH ①–⑤ (để chụp ảnh và demo)
+     Gắn data-badge="①" vào phần tử cần đánh số.
+     Nút #nut-hien-so bật/tắt: batNutHienSo(document.getElementById("nut-hien-so"))
+     Ảnh người mua (A) dùng ①–⑤; ảnh người bán/nhân viên (B) dùng ⑥–⑩ để hai ảnh không trùng số.
+   ===================================================================== */
+
+:root {
+  --nen: #f4f5f7;
+  --the: #ffffff;
+  --chu: #1f2328;
+  --chu-phu: #656d76;
+  --vien: #d0d7de;
+  --nhan: #ee4d2d;          /* màu nhấn */
+  --nhan-nhat: #fff1ec;
+  --ok: #1a7f37;
+  --ok-nhat: #e6f4ea;
+  --vang: #9a6700;
+  --vang-nhat: #fff8c5;
+  --do: #cf222e;
+  --do-nhat: #ffebe9;
+  --xam: #eaeef2;
+  --so: #6639ba;            /* màu huy hiệu số chú thích */
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--nen);
+  color: var(--chu);
+}
+
+/* ---------- Thanh trên cùng ---------- */
+header {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+  padding: 10px 16px;
+  background: var(--the);
+  border-bottom: 1px solid var(--vien);
+}
+header h1 { font-size: 16px; margin: 0 auto 0 0; }
+header h1 small { display: block; font-weight: 400; font-size: 12px; color: var(--chu-phu); }
+header a { color: var(--nhan); text-decoration: none; font-weight: 600; }
+
+/* ---------- Nút ---------- */
+button {
+  font: inherit; cursor: pointer;
+  padding: 6px 12px; border-radius: 6px;
+  border: 1px solid var(--vien); background: var(--the); color: var(--chu);
+  text-align: left;
+}
+button:hover { border-color: var(--chu-phu); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.chon-ca[aria-pressed="true"] { background: var(--nhan); border-color: var(--nhan); color: #fff; }
+#nut-hien-so[aria-pressed="true"] { background: var(--so); border-color: var(--so); color: #fff; }
+.nut-chinh { background: var(--nhan); border-color: var(--nhan); color: #fff; }
+.nut-chinh:hover { border-color: var(--nhan); filter: brightness(.95); }
+.nut-phu { background: var(--the); }
+.nut-nguy-hiem { background: var(--do); border-color: var(--do); color: #fff; }
+.lien-ket {
+  border: none; background: none; padding: 0;
+  color: var(--nhan); font-weight: 600; text-decoration: underline;
+}
+
+/* ---------- Bố cục ---------- */
+main {
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 16px; padding: 16px; max-width: 1200px; margin: 0 auto;
+}
+@media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+.khoi {
+  background: var(--the); border: 1px solid var(--vien); border-radius: 10px;
+  display: flex; flex-direction: column; min-height: 0;
+}
+.khoi > h2 {
+  font-size: 14px; margin: 0; padding: 10px 14px;
+  border-bottom: 1px solid var(--vien); color: var(--chu-phu);
+}
+.noi-dung { padding: 14px; }
+.noi-dung:empty { display: none; }
+.cho-trong { color: var(--chu-phu); font-style: italic; margin: 0; }
+.cot { display: flex; flex-direction: column; gap: 16px; }
+
+/* ---------- Chat ---------- */
+.nhat-ky { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.tin { max-width: 85%; padding: 10px 12px; border-radius: 12px; }
+.tin p { margin: 0 0 6px; }
+.tin p:last-child { margin-bottom: 0; }
+.tin.nguoi-mua { align-self: flex-end; background: var(--nhan-nhat); border-bottom-right-radius: 4px; }
+.tin.ai { align-self: flex-start; background: var(--xam); border-bottom-left-radius: 4px; }
+.tin .ai-ten { font-size: 12px; font-weight: 600; color: var(--chu-phu); margin-bottom: 4px; }
+.tin p.nhan-manh { background: var(--vang-nhat); border-left: 3px solid var(--vang); padding: 4px 8px; border-radius: 4px; }
+.anh-gia {
+  margin-top: 8px; padding: 18px 12px; border-radius: 8px;
+  background: #c9ced4; color: #333; font-size: 13px; text-align: center;
+}
+.he-thong { align-self: center; font-size: 12px; color: var(--chu-phu); text-align: center; max-width: 90%; }
+.o-nhap { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--vien); }
+.o-nhap textarea {
+  flex: 1; font: inherit; resize: none; padding: 8px;
+  border: 1px solid var(--vien); border-radius: 8px; background: var(--nen);
+}
+
+/* ---------- Nhãn ---------- */
+.nhan {
+  display: inline-block; font-size: 12px; font-weight: 600;
+  padding: 1px 8px; border-radius: 999px; white-space: nowrap;
+}
+.nhan-do { background: var(--do-nhat); color: var(--do); }
+.nhan-vang { background: var(--vang-nhat); color: var(--vang); }
+.nhan-xanh { background: var(--ok-nhat); color: var(--ok); }
+.nhan-xam { background: var(--xam); color: var(--chu-phu); }
+
+/* ---------- Chip ---------- */
+.chip {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px;
+  padding: 8px 12px; border-radius: 8px; font-size: 14px;
+}
+.chip-ok { background: var(--ok-nhat); color: var(--ok); }
+.chip-cho { background: var(--vang-nhat); color: var(--vang); }
+.chip small { display: block; color: var(--chu-phu); font-size: 12px; }
+
+/* ---------- Thẻ căn cứ ---------- */
+.hai-cot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .hai-cot { grid-template-columns: 1fr; } }
+.phien-ban {
+  border: 1px solid var(--vien); border-radius: 8px; padding: 10px;
+  color: var(--chu-phu); background: var(--nen);
+}
+.phien-ban.dung-de-so { border: 2px solid var(--ok); color: var(--chu); background: var(--the); }
+.pb-tieu-de { font-size: 12px; font-weight: 600; margin-bottom: 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.pb-noi-dung { font-size: 15px; }
+.bang-so { width: 100%; border-collapse: collapse; font-size: 14px; }
+.bang-so td { padding: 6px 4px; border-bottom: 1px solid var(--xam); }
+.bang-so td:last-child { text-align: right; white-space: nowrap; }
+.bang-so .khop { color: var(--ok); font-weight: 600; }
+.bang-so .khong-khop { color: var(--do); font-weight: 600; }
+.bang-so .khong-de-cap { color: var(--chu-phu); font-style: italic; }
+.gioi-han {
+  margin-top: 10px; padding: 8px 10px; border-radius: 6px;
+  background: var(--vang-nhat); color: var(--vang); font-size: 13px; font-weight: 600;
+}
+.bang-chung {
+  margin-top: 10px; padding: 8px 10px; border-radius: 6px;
+  background: var(--xam); font-size: 13px;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between;
+}
+.khoi-dau { margin-bottom: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- Hành động ---------- */
+.hanh-dong { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 14px; }
+.hanh-dong:empty { display: none; }
+.hang-nut { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---------- Việc bị cấm: chỉ có chữ ---------- */
+.khong-co-nut {
+  padding: 8px 10px; border-radius: 6px; font-size: 13px;
+  border: 1px dashed var(--chu-phu); color: var(--chu-phu); background: var(--nen);
+}
+
+/* ---------- Đồng hồ hạn ---------- */
+.dong-ho {
+  padding: 8px 10px; border-radius: 6px; font-size: 14px;
+  background: var(--vang-nhat); color: var(--vang);
+}
+
+/* ---------- Hộp xác nhận ---------- */
+dialog.hop-xac-nhan {
+  border: 1px solid var(--vien); border-radius: 10px; padding: 0;
+  width: min(480px, calc(100vw - 32px)); color: var(--chu);
+}
+dialog.hop-xac-nhan::backdrop { background: rgba(0, 0, 0, .4); }
+dialog.hop-xac-nhan h3 { margin: 0; padding: 12px 14px; font-size: 16px; border-bottom: 1px solid var(--vien); }
+dialog.hop-xac-nhan .hang-nut { justify-content: flex-end; padding: 12px 14px; border-top: 1px solid var(--vien); }
+
+/* ---------- Thanh trạng thái ---------- */
+ol.trang-thai { list-style: none; margin: 0; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+ol.trang-thai li { display: flex; align-items: center; gap: 10px; color: var(--chu-phu); }
+ol.trang-thai li .cham {
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; font-size: 12px;
+  border: 2px solid var(--vien); background: var(--the);
+}
+ol.trang-thai li small { color: var(--chu-phu); font-weight: 400; }
+ol.trang-thai li.xong { color: var(--chu); }
+ol.trang-thai li.xong .cham { background: var(--ok); border-color: var(--ok); color: #fff; }
+ol.trang-thai li.dang { color: var(--chu); font-weight: 600; }
+ol.trang-thai li.dang .cham { border-color: var(--nhan); color: var(--nhan); }
+.dong-han { padding: 0 14px 14px; font-size: 13px; }
+.dong-han.duoc-giu { color: var(--ok); font-weight: 600; }
+
+/* ---------- Số chú thích ---------- */
+[data-badge] { position: relative; }
+[data-badge]::after {
+  content: attr(data-badge);
+  display: none;
+  position: absolute; top: -10px; left: -10px; z-index: 5;
+  width: 24px; height: 24px; border-radius: 50%;
+  place-items: center;
+  background: var(--so); color: #fff; font-size: 14px; font-weight: 700;
+  box-shadow: 0 0 0 2px #fff;
+}
+body.hien-so [data-badge]::after { display: grid; }
+body.hien-so [data-badge] { outline: 2px dashed var(--so); outline-offset: 2px; }

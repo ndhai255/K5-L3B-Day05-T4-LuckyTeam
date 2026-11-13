@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Người mua · Trợ lý khiếu nại</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  /* Riêng trang người mua */
+  #chat { min-height: 560px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Trò chuyện với trợ lý · Khiếu nại "không đúng mô tả"
+    <small>Phía người mua · prototype LuckyTeam · dữ liệu giả</small>
+  </h1>
+  <button class="chon-ca" data-ca="K4" aria-pressed="false">K4: Áo DH-1003 (mô tả đã sửa)</button>
+  <button class="chon-ca" data-ca="K5" aria-pressed="false">K5: Giày DH-1004 (người bán đúng)</button>
+  <button id="nut-hien-so" aria-pressed="false">Hiện số chú thích</button>
+  <a href="seller.html">Xem phía người bán / nhân viên →</a>
+</header>
+
+<main>
+  <!-- Cột trái: khung chat -->
+  <section class="khoi" id="chat">
+    <h2 id="tieu-de-chat">Chat</h2>
+    <div class="nhat-ky" id="nhat-ky"></div>
+    <form class="o-nhap" id="o-nhap">
+      <textarea id="o-chu" rows="3" readonly></textarea>
+      <button type="submit" class="nut-chinh" id="nut-gui">Gửi khiếu nại</button>
+    </form>
+  </section>
+
+  <!-- Cột phải: căn cứ AI đã so + trạng thái hồ sơ -->
+  <div class="cot">
+    <section class="khoi">
+      <h2>Căn cứ AI đã so</h2>
+      <div class="noi-dung don-tom-tat" id="don-tom-tat"></div>
+      <div class="noi-dung" id="can-cu"></div>
+      <div class="hanh-dong" id="hanh-dong"></div>
+    </section>
+
+    <section class="khoi">
+      <h2>Trạng thái hồ sơ</h2>
+      <ol class="trang-thai" id="trang-thai"></ol>
+      <div class="dong-han" id="dong-han"></div>
+    </section>
+  </div>
+</main>
+
+<script src="data.js"></script>
+<script src="chung.js"></script>
+<script>
+  let caHienTai = null;   // "K4" | "K5"
+
+  // ---------- Thêm tin vào khung chat ----------
+  function themTinNguoiMua(chu, anh) {
+    const div = document.createElement("div");
+    div.className = "tin nguoi-mua";
+    const p = document.createElement("p");
+    p.textContent = chu;
+    div.appendChild(p);
+    if (anh) {
+      const a = document.createElement("div");
+      a.className = "anh-gia";
+      a.textContent = "🖼 " + anh;
+      div.appendChild(a);
+    }
+    $("nhat-ky").appendChild(div);
+    cuonXuong();
+  }
+
+  // doanVan: mảng các đoạn (có <b>), lấy nguyên văn từ data.js
+  function themTinAI(doanVan) {
+    const div = document.createElement("div");
+    div.className = "tin ai";
+    div.innerHTML = `<div class="ai-ten">🤖 Trợ lý AI</div>` +
+      doanVan.map((d) => `<p>${d}</p>`).join("");
+    $("nhat-ky").appendChild(div);
+    cuonXuong();
+    return div;
+  }
+
+  function themDongHeThong(chu) {
+    const div = document.createElement("div");
+    div.className = "he-thong";
+    div.textContent = chu;
+    $("nhat-ky").appendChild(div);
+    cuonXuong();
+    return div;
+  }
+
+  function cuonXuong() { $("nhat-ky").scrollTop = $("nhat-ky").scrollHeight; }
+
+  // ---------- Chọn ca: dựng lại toàn bộ màn hình từ đầu ----------
+  function chonCa(ca) {
+    caHienTai = ca;
+    const tin = TIN[ca];
+    const don = DON[tin.don];
+
+    document.querySelectorAll(".chon-ca").forEach((b) =>
+      b.setAttribute("aria-pressed", b.dataset.ca === ca));
+
+    $("tieu-de-chat").textContent = `Chat · Đơn ${tin.don} · ${don.sp}`;
+    $("nhat-ky").innerHTML = "";
+    $("o-chu").value = tin.nguoiMua;
+    $("nut-gui").disabled = false;
+
+    $("don-tom-tat").innerHTML =
+      `Đơn <b>${tin.don}</b> · ${don.sp} · ${tienVND(don.gia)} · đặt ${don.ngayDat} · giao ${don.ngayGiao}`;
+    $("can-cu").innerHTML = `<p class="cho-trong">Trợ lý chưa so. Bấm [Gửi khiếu nại] để bắt đầu.</p>`;
+    $("hanh-dong").innerHTML = "";
+    $("dong-han").className = "dong-han";
+    $("dong-han").textContent = `Hạn yêu cầu trả hàng: ${don.hanTra}`;
+    veTrangThai($("trang-thai"), 0);
+  }
+
+  // ---------- Gửi khiếu nại ----------
+  $("o-nhap").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const tin = TIN[caHienTai];
+    themTinNguoiMua(tin.nguoiMua, tin.anhNguoiMua);
+    $("o-chu").value = "";
+    $("nut-gui").disabled = true;
+    veTrangThai($("trang-thai"), 1, { dang: false });
+
+    const dangSo = themDongHeThong("Trợ lý đang so với mô tả lúc đặt…");
+    setTimeout(() => {
+      dangSo.remove();
+      if (caHienTai === "K4") luongK4();
+      else luongK5();
+    }, 900);
+  });
+
+  // =====================================================================
+  // K4 — Mô tả đã bị sửa sau khi bán (DH-1003)
+  // AI: dừng kết luận, tự chuyển nhân viên (BẮT BUỘC theo §4 → không có Hoàn tác),
+  //     tự gửi shop yêu cầu giải thích (hạn 48h). Người mua không phải gửi thêm gì.
+  // =====================================================================
+  function luongK4() {
+    const tin = TIN.K4;
+    const don = DON[tin.don];
+    themTinAI(tin.ai);
+
+    // ① Thẻ hai phiên bản mô tả — G11 + PAIR Explainability & Trust
+    $("can-cu").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-do">⚠ Mô tả đã sửa sau khi bán (${don.ngaySua})</span>
+      </div>
+      <div class="hai-cot" data-badge="①">
+        <div class="phien-ban dung-de-so">
+          <div class="pb-tieu-de">Lúc bạn đặt · ${don.ngayDat}
+            <span class="nhan nhan-xanh">bản dùng để so</span></div>
+          <div class="pb-noi-dung">${don.moTaLucDat}</div>
+        </div>
+        <div class="phien-ban">
+          <div class="pb-tieu-de">Hiện tại · shop sửa ${don.ngaySua}</div>
+          <div class="pb-noi-dung">${don.moTaHienTai}</div>
+        </div>
+      </div>
+      <div class="bang-chung">
+        <span>🖼 ${don.bangChungNguoiMua}</span>
+        <span class="nhan nhan-xanh">Bằng chứng bạn đã gửi ✓</span>
+      </div>
+      <table class="bang-so" style="margin-top:10px">
+        <tr><td>Ảnh tag so với mô tả lúc đặt</td><td class="khong-khop">✗ Khác nhau</td></tr>
+      </table>`;
+
+    // Việc AI đã tự làm. Chuyển nhân viên là bắt buộc khi mô tả bị sửa → không có [Hoàn tác].
+    const hd = $("hanh-dong");
+    hd.innerHTML = "";
+    hd.appendChild(taoChip("✓ Đã chuyển nhân viên xử lý khiếu nại", {
+      phu: "Trả lời bạn trong 24 giờ · bắt buộc chuyển vì mô tả đã sửa sau khi bán",
+    }));
+    hd.appendChild(taoChip("⏳ Shop được hỏi giải thích", {
+      loai: "cho",
+      phu: `Hạn phản hồi ${don.hanShopPhanHoi} · shop chưa bị xử thua`,
+    }));
+    const hang = document.createElement("div");
+    hang.className = "hang-nut";
+    hang.innerHTML = `
+      <button class="nut-phu" id="nut-bo-sung">Bổ sung thông tin (không bắt buộc)</button>
+      <button class="nut-phu" id="nut-xem-ho-so">Xem hồ sơ</button>`;
+    hd.appendChild(hang);
+    $("nut-bo-sung").onclick = () =>
+      themDongHeThong("(Mock) Mở chỗ tải ảnh. Bạn không cần gửi thêm; hồ sơ vẫn chạy và không tự đóng.");
+    $("nut-xem-ho-so").onclick = () =>
+      themDongHeThong(`(Mock) Hồ sơ ${tin.don}: hai phiên bản mô tả + ảnh tag của bạn đã gửi kèm cho nhân viên.`);
+
+    veTrangThai($("trang-thai"), 1, {
+      chiTiet: { 2: "nhận trong 24h", 3: `hạn ${don.hanShopPhanHoi}` },
+    });
+    $("dong-han").className = "dong-han duoc-giu";
+    $("dong-han").textContent =
+      `Hạn trả hàng ${don.hanTra}: được giữ, vì hồ sơ đã mở hôm nay (${HOM_NAY}).`;
+  }
+
+  // =====================================================================
+  // K5 — Người bán đúng, người mua doạ bóc phốt (DH-1004)
+  // AI: trả lời kèm giới hạn ("chưa đủ căn cứ"), không tiền nào di chuyển,
+  //     cho hai đường đi tiếp. Không có nút Hoàn tiền / Đóng khiếu nại / Phạt shop.
+  // =====================================================================
+  function luongK5() {
+    const tin = TIN.K5;
+    const don = DON[tin.don];
+    const div = themTinAI(tin.ai);
+
+    // ④ Câu "chưa đủ căn cứ" — G10
+    const cauChuaDu = [...div.querySelectorAll("p")]
+      .find((p) => p.textContent.includes("chưa đủ căn cứ"));
+    cauChuaDu.classList.add("nhan-manh");
+    cauChuaDu.dataset.badge = "④";
+
+    // Bảng so từng mục + ③ nhãn giới hạn (G2)
+    const dong = don.soSanh.map(([muc, khop]) =>
+      `<tr><td>${muc}</td><td class="${khop ? "khop" : "khong-khop"}">${khop ? "✓ Khớp" : "✗ Khác"}</td></tr>`
+    ).join("");
+    $("can-cu").innerHTML = `
+      <div class="khoi-dau">
+        <span class="nhan nhan-xam">So với mô tả lúc đặt · ${don.ngayDat}</span>
+      </div>
+      <table class="bang-so">
+        ${dong}
+        <tr><td>${don.khongDeCap}</td><td class="khong-de-cap">— Mô tả không đề cập</td></tr>
+      </table>
+      <div class="gioi-han" data-badge="③">${tin.nhanGioiHan}</div>
+      <div class="bang-chung">
+        <span>🖼 ${don.bangChungNguoiMua}</span>
+        <span class="nhan nhan-xanh">Bằng chứng bạn đã gửi ✓</span>
+      </div>`;
+
+    veHaiDuong();
+    veTrangThai($("trang-thai"), 1, { dang: false });
+    $("dong-han").className = "dong-han";
+    $("dong-han").textContent = `Hạn yêu cầu trả hàng: còn ${don.conNgay} ngày, tới ${don.hanTra}.`;
+  }
+
+  // ⑤ Hai đường đi tiếp + [Gặp nhân viên] — PAIR Errors & Graceful Failure
+  function veHaiDuong() {
+    const nut = TIN.K5.nut;
+    const hd = $("hanh-dong");
+    hd.innerHTML = `
+      <div class="hang-nut" data-badge="⑤" style="flex-direction:column; align-items:stretch">
+        <button class="nut-chinh" id="nut-nghi-gia">${nut.nghiHangGia}</button>
+        <button class="nut-phu" id="nut-anh-khac">${nut.guiAnhKhac}</button>
+        <div>Hoặc <button class="lien-ket" id="nut-gap-nv">${nut.gapNhanVien}</button></div>
+      </div>`;
+    $("nut-nghi-gia").onclick = chuyenKiemDinh;
+    $("nut-anh-khac").onclick = () =>
+      themDongHeThong("(Mock) Mở chỗ tải ảnh. Có ảnh chỗ khác mô tả thì trợ lý so lại theo luồng thường.");
+    $("nut-gap-nv").onclick = () => {
+      hd.innerHTML = "";
+      hd.appendChild(taoChip("✓ Đã chuyển nhân viên", { phu: "Trả lời bạn trong 24 giờ" }));
+      themDongHeThong("Đã chuyển hồ sơ cho nhân viên theo yêu cầu của bạn.");
+      veTrangThai($("trang-thai"), 1, { chiTiet: { 2: "nhận trong 24h" } });
+    };
+  }
+
+  // Người mua chọn "Nghi hàng giả": AI tự chuyển kiểm định + tự xin shop chứng từ.
+  // ② chuyen_truong_nhom tự làm, đảo lại được → có [Hoàn tác]; shop nhận tin huỷ (như K8).
+  function chuyenKiemDinh() {
+    const tin = TIN.K5;
+    const don = DON[tin.don];
+    const hd = $("hanh-dong");
+    hd.innerHTML = "";
+    const chip = taoChip("✓ Đã chuyển bộ phận kiểm định hàng chính hãng", {
+      phu: "Liên hệ bạn trong 24 giờ · không hứa trước kết quả",
+      hoanTac: () => {
+        themDongHeThong("Đã huỷ chuyển kiểm định. Shop đã nhận tin huỷ yêu cầu chứng từ.");
+        veHaiDuong();
+        veTrangThai($("trang-thai"), 1, { dang: false });
+      },
+    });
+    chip.dataset.badge = "②";
+    hd.appendChild(chip);
+    hd.appendChild(taoChip("⏳ Shop được xin hoá đơn nhập hàng / giấy uỷ quyền", {
+      loai: "cho",
+      phu: `Hạn ${don.hanShopPhanHoi} · shop chưa bị phạt hay xử thua`,
+    }));
+    themDongHeThong("Đã chuyển sang bộ phận kiểm định hàng chính hãng.");
+    veTrangThai($("trang-thai"), 1, {
+      chiTiet: { 2: "bộ phận kiểm định, trong 24h", 3: `hạn ${don.hanShopPhanHoi}` },
+    });
+  }
+
+  // ---------- Nút chọn ca và nút hiện số ----------
+  document.querySelectorAll(".chon-ca").forEach((b) =>
+    b.addEventListener("click", () => chonCa(b.dataset.ca)));
+  batNutHienSo($("nut-hien-so"));
+
+  chonCa("K4");
+</script>
+</body>
+</html>
