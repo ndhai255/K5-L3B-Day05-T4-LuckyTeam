@@ -6,8 +6,8 @@
 
 | Họ và Tên | Mã Học Viên | Việc đã làm |
 |---|---|---|
-| [Thành viên A] | [Mã HV] | Chặng 1–4 cùng làm (đọc đề, kịch bản, khi AI sai, mức tự chủ) · chặng 5+: ____ |
-| [Thành viên B] | [Mã HV] | Chặng 1–4 cùng làm (đọc đề, kịch bản, khi AI sai, mức tự chủ) · chặng 5+: ____ |
+| Nguyễn Đức Hải | 2A202603943 | **Chặng 1–4:** §1 lát cắt & phạm vi, §2 kịch bản rủi ro, §3 khi AI sai, §4 mức tự chủ. **Chặng 5:** dữ liệu dựng `prototype/data.js`; giao diện chung `style.css`, `chung.js`; màn hình người mua `prototype/index.html` (K4, K5) và ảnh 1a–1c; §5a và phần độ chắc / bằng chứng ở §5c; sửa khoá đối xứng hai nút quyết của nhân viên. **Chặng 6–7:** §6 tốt là gì, §7 demo, `prototype/README.md`. Trình bày phần mở đầu và phía người mua khi demo. |
+| Vũ Quang Hải | 2A202603935 | **Chặng 5:** màn hình người bán & nhân viên `prototype/seller.html` (K1, K4, K5: hạn 48h, nút đồng ý của shop, hộp xác nhận, ô phạt shop không có nút, tách lời doạ khỏi căn cứ) và ảnh 2a–2c; §5b và phần điều khiển mức tự chủ ở §5c. Trình bày phía người bán & nhân viên khi demo. |
 
 ---
 
@@ -208,8 +208,8 @@ Mỗi người tự xếp trước, không bàn (5 phút), rồi mới so:
 
 | Người | Chọn lúc đầu | Lý do | Kịch bản ủng hộ |
 |---|---|---|---|
-| [Thành viên A] | **Tự làm** khi bằng chứng rõ và người bán đã nhận lỗi | Ca rõ ràng mà bắt chờ thì vô ích: người mua đã gửi ảnh, shop đã nhận, vẫn phải chờ ai đó bấm. | **K1**: chờ là cái giá của phía "cần duyệt" |
-| [Thành viên B] | **Cấm** với AI | AI dễ bị doạ và bị lừa. Lời người mua kể ("shop nhận rồi") không kiểm chứng được. | **K5**: hoàn là cái giá của phía "tự làm"; K1 nếu người mua nói dối |
+| Nguyễn Đức Hải (A) | **Tự làm** khi bằng chứng rõ và người bán đã nhận lỗi | Ca rõ ràng mà bắt chờ thì vô ích: người mua đã gửi ảnh, shop đã nhận, vẫn phải chờ ai đó bấm. | **K1**: chờ là cái giá của phía "cần duyệt" |
+| Vũ Quang Hải (B) | **Cấm** với AI | AI dễ bị doạ và bị lừa. Lời người mua kể ("shop nhận rồi") không kiểm chứng được. | **K5**: hoàn là cái giá của phía "tự làm"; K1 nếu người mua nói dối |
 
 *(Nhóm điền lại đúng lựa chọn thật của mỗi người nếu khác.)*
 
@@ -329,7 +329,43 @@ Nhóm thiết kế cơ chế điều khiển mức tự chủ trên màn hình t
 | **PA4 — Phân tách điều khiển theo đúng *cost-of-error* và vai trò bên chịu thiệt: Chip + `[Hoàn tác]` cho việc tự làm đảo được · Hộp xác nhận `<dialog>` cho bên mất tiền / nhân viên ở việc di chuyển tiền · Ẩn đề xuất AI trên màn hình nhân viên · Ô `.khong-co-nut` cho việc bị cấm** | **Chọn** | Khớp 1–1 với bảng mức tự chủ ở §4: giữ được tốc độ 1 chạm ở ca rõ ràng (K1 shop tự bấm đồng ý), chặn triệt để rủi ro mất tiền oan ở K4 và K5, chống *automation bias* cho nhân viên, và để người chấm / người dùng nhìn vào màn hình thấy ngay biên giới quyền hạn của AI. |
 
 ## §6. Tốt là gì  (chặng 6)
-_(chưa làm)_ — ghi chú cho chặng này: lỗi còn lại đã thấy ở §4 là tiền của người bán đúng bị giữ trong lúc kiểm định (K5).
+
+Ba tiêu chí Pass/Fail. Mỗi tiêu chí chấm bằng cách nhìn vào câu trả lời, thẻ căn cứ và các nút trên màn hình, nên hai người chấm độc lập sẽ ra cùng kết quả.
+
+| # | Tiêu chí | Pass khi | Fail khi |
+|---|---|---|---|
+| **T1** | **So đúng nguồn** | Câu trả lời hoặc thẻ căn cứ trích **mô tả lúc đặt kèm ngày đặt**. Nếu đơn có cờ "mô tả đã sửa sau khi bán", màn hình hiện **cả hai phiên bản** và hồ sơ được **chuyển nhân viên**. | Kết luận dựa trên mô tả hiện tại, hoặc không nói đã so với bản nào, hoặc đơn có cờ sửa mà AI vẫn tự đi tiếp. |
+| **T2** | **Tiền không đi khi chưa nghe đủ hai bên** | Không có `thuc_hien_hoan_tien` hay `tu_choi_khieu_nai` nào chạy mà thiếu cú bấm xác nhận của **bên chịu thiệt hoặc nhân viên**. Nút quyết của nhân viên **khoá cả hai hướng** cho tới khi shop phản hồi hoặc hết hạn 48 giờ. Lời doạ và lịch sử một bên **không** nằm trong khung căn cứ. | Có bất kỳ đường nào để tiền đi mà AI là người bấm cuối; hoặc một hướng quyết được trước khi nghe shop; hoặc lời doạ được dùng làm lý do. |
+| **T3** | **Người dùng biết bước tiếp theo và hạn** | Mỗi lượt trả lời cuối có (a) ít nhất một bước tiếp theo cụ thể (nút bấm, hoặc câu "bạn không cần gửi thêm gì") và (b) **hạn trả hàng bằng ngày cụ thể**, kèm "còn bao lâu" hoặc "được giữ". | Câu trả lời kết thúc mà người dùng không biết làm gì tiếp, hoặc không nói hạn, hoặc nói hạn không có trong dữ liệu đơn (như "15 ngày" của sản phẩm thật). |
+
+**Chấm thử trên hai kịch bản đắt nhất:**
+
+| Kịch bản | T1 | T2 | T3 |
+|---|---|---|---|
+| **K4** (mô tả đã sửa) | **Pass**: thẻ ① trích "Lúc bạn đặt · 02/11: 100% cotton" và bản hiện tại; hồ sơ bị chuyển nhân viên bắt buộc. | **Pass**: phía người mua không có nút tiền; phía nhân viên hai nút khoá tới khi shop giải trình hoặc quá 48 giờ (ảnh 2a, ⑩). | **Pass**: "Bạn không cần gửi thêm gì", nút bổ sung không bắt buộc; "Hạn trả hàng 17/11: được giữ". |
+| **K5** (người bán đúng + doạ) | **Pass**: bảng so 4 mục ghi "So với mô tả lúc đặt · 09/11". | **Pass**: AI không gọi tool tiền nào; lời doạ bị tách khỏi căn cứ (⑨); hai nút nhân viên khoá tới khi shop nộp chứng từ (ảnh 2b). | **Pass**: hai đường đi tiếp và [Gặp nhân viên] (⑤); "còn 6 ngày, tới 19/11". |
+
+**Lỗi còn lại (thiết kế đạt cả ba tiêu chí nhưng vẫn chưa ổn):**
+1. **K5: tiền của người bán đúng bị giữ** trong lúc kiểm định. SLA 24 giờ giới hạn thời gian chờ nhưng không loại bỏ nó. Đây là giá nhóm chấp nhận để nghe đủ hai bên (§4).
+2. **K5: người mua không chọn đường nào** thì khiếu nại vẫn mở tới 19/11, trong khi shop chưa được báo gì (theo §3, chưa ai được báo cho tới khi có ảnh). Shop có thể bị giữ tiền tới hết hạn mà không biết vì sao. Hướng sửa: sau 48 giờ người mua im lặng, gửi shop một tin "có khiếu nại đang mở, chưa cần làm gì".
+3. **Ba tiêu chí không đo được AI đọc ảnh có đúng không.** Prototype viết sẵn kết quả so ("tag ghi 65% cotton"); nếu AI đọc nhầm ảnh thì T1 vẫn Pass vì đã so đúng *bản*, nhưng so sai *nội dung*. Cần bộ eval riêng cho bước đọc ảnh (để buổi Evaluation).
+4. **T1 dựa vào việc sàn có bản chụp mô tả lúc đặt** (`xem_don_luc_dat`). Đây là giả định về hệ thống, không phải thứ AI tự làm được; thiếu bản chụp thì AI phải nói "không có bản lúc đặt" và chuyển người.
 
 ## §7. Demo
-_(chưa làm)_
+
+**Phân công trình bày:**
+
+| Phần | Người | Nội dung |
+|---|---|---|
+| Mở đầu (30 giây) | A | Lát cắt T4; luật "tiền chỉ di chuyển khi bên mất tiền tự đồng ý, hoặc nhân viên quyết". |
+| Phía người mua | A | Bấm `index.html`: K4 (①, mô tả đã sửa) rồi K5 (③④⑤, rồi ② hoàn tác). Trả lời "chỗ nào là G__". |
+| Phía người bán & nhân viên | B | Bấm `seller.html`: ai quyết, hộp xác nhận (⑦), hai nút khoá đối xứng (⑩), ô phạt shop không có nút. Trả lời "sai thì ai mất gì". |
+| Ca lạ | Người có màn hình liên quan | Xử theo đúng bảng mức tự chủ ở §4. |
+
+**Cách nhóm xử một ca lạ (chuẩn bị trước):**
+1. Có tool di chuyển tiền không? Có thì AI không bấm, chỉ soạn đề xuất; người duyệt là bên chịu thiệt hoặc nhân viên.
+2. Thiếu đơn hoặc thiếu chỗ sai? Hỏi lại một câu kèm nút chọn đơn (K2).
+3. Có lời doạ, đòi phạt shop, đòi SĐT? Không làm theo; tách lời doạ khỏi căn cứ, chuyển chuyên trách, mở chat trong app (K5, K6, K7).
+4. Hạn trả hàng còn không? Đọc từ đơn, nói ngày cụ thể (K9).
+
+**Ca lạ nhận được ở demo:** _(điền sau demo: ca là gì · prototype hoặc nhóm đã xử thế nào, theo mức nào · nhóm có đổi ý gì sau ca đó không)_
