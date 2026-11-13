@@ -245,7 +245,30 @@ Khi tách tool và đặt **cần người duyệt (bên chịu thiệt hoặc n
 ## §5. Prototype  (chặng 5)
 
 ### §5a. Màn hình người mua (A)
-_(chưa làm)_
+
+- **File:** `prototype/index.html`. Mở thẳng bằng trình duyệt, không cần server hay đăng nhập. Có link sang `prototype/seller.html` (phía người bán và nhân viên, §5b).
+- **Công cụ:** HTML, CSS, JS thuần. Dữ liệu dựng ở `prototype/data.js`; giao diện và hàm dùng chung cho cả hai màn ở `prototype/style.css` và `prototype/chung.js`.
+- **Phần mock:** toàn bộ. Đơn hàng, ảnh (ô xám ghi nội dung ảnh) và câu AI trả lời đều viết sẵn; câu AI chép **nguyên văn §3**. Màn này **không** có lời gọi AI thật.
+- **Cách bấm qua ca khó:** chọn `K4` hoặc `K5` ở thanh trên → bấm **[Gửi khiếu nại]** → đọc câu trả lời và thẻ "Căn cứ AI đã so". Ở K5 bấm tiếp **[Tôi nghi hàng giả]**, rồi **[Hoàn tác]**. Nút **[Hiện số chú thích]** bật các số ①–⑤ dưới đây ngay trên màn hình.
+- **Ảnh có đánh số:** `prototype/anh-1a-K4.png` · `prototype/anh-1b-K5.png` · `prototype/anh-1c-K5-hoan-tac.png`.
+
+| Số | Ảnh | Thể hiện gì | Nguyên tắc HAX/PAIR | Mức tự chủ |
+|---|---|---|---|---|
+| ① | 1a (K4) | Thẻ **hai phiên bản mô tả** đặt cạnh nhau: *Lúc bạn đặt · 02/11* "100% cotton" (viền xanh, nhãn "bản dùng để so") và *Hiện tại · shop sửa 05/11* (màu nhạt), cùng nhãn đỏ "Mô tả đã sửa sau khi bán". | **G11** + **PAIR Explainability & Trust**: người mua tự thấy AI so với bản nào và vì sao ra "khác nhau". | `xem_don_luc_dat`: **tự làm** (chỉ đọc) |
+| ② | 1c (K5) | Sau khi người mua bấm [Tôi nghi hàng giả]: chip "Đã chuyển bộ phận kiểm định hàng chính hãng · không hứa trước kết quả" kèm nút **[Hoàn tác]**. | — | `chuyen_truong_nhom`: **tự làm, có hoàn tác** |
+| ③ | 1b (K5) | Nhãn giới hạn ngay dưới bảng so: *"AI chỉ so với mô tả. AI không kiểm định thật/giả."* | **G2**: nói rõ AI làm được đến đâu. | — |
+| ④ | 1b (K5) | Câu *"mình chưa đủ căn cứ để nói giày không đúng mô tả"* được tô nổi trong tin AI. | **G10**: thu hẹp kết luận khi chưa chắc, không đoán theo hướng nào. | không gọi tool di chuyển tiền nào |
+| ⑤ | 1b (K5) | Hai nút đi tiếp **[Tôi nghi hàng giả → chuyển kiểm định]** / **[Gửi ảnh chỗ khác mô tả]** và link **[Gặp nhân viên]**. | **PAIR Errors & Graceful Failure**: câu "chưa đủ căn cứ" luôn đi kèm đường lui, người mua không bị kẹt. | **đường chuyển người** |
+
+**Mức tự chủ khớp §4 thế nào trên màn này:**
+- **Tự làm có hoàn tác:** ② ở K5. Ở K4, chip "Đã chuyển nhân viên" **cố ý không có** [Hoàn tác], vì §4 bắt buộc chuyển người khi mô tả bị sửa sau khi bán (ảnh 1a).
+- **Việc cấm hoặc không thuộc người mua không có nút:** cả hai ca đều không có nút Hoàn tiền, Đóng khiếu nại hay Phạt shop ở phía người mua. Vùng hành động ở ảnh 1b chỉ có ba lối ở ⑤.
+- **Cần duyệt có xác nhận:** nằm ở phía người bán và nhân viên (§5b), vì người duyệt `thuc_hien_hoan_tien` và `tu_choi_khieu_nai` là bên chịu thiệt hoặc nhân viên, không phải người mua.
+
+**Câu bổ sung so với §3:** khi người mua bấm [Hoàn tác] ở ②, shop nhận tin huỷ (cùng cách xử với K8 ở §2):
+> *"Yêu cầu kiểm định cho đơn DH-1004 đã được người mua huỷ. Shop không cần gửi gì thêm cho yêu cầu này."*
+
+Người mua thấy dòng *"Đã huỷ chuyển kiểm định. Shop đã nhận tin huỷ yêu cầu chứng từ."* và màn quay lại hai lựa chọn ở ⑤.
 
 ### §5b. Màn hình người bán & nhân viên (B)
 _(chưa làm)_
@@ -253,7 +276,19 @@ _(chưa làm)_
 ### §5c. Lập luận cách hiện
 
 #### Độ chắc / bằng chứng (A)
-_(chưa làm)_
+
+**Quyết định: không hiện con số độ chắc. Hiện thẳng căn cứ AI đã so, dưới dạng thẻ người mua tự kiểm được.**
+
+| Phương án | Chọn? | Vì sao |
+|---|---|---|
+| **Thanh % độ tin cậy** (ví dụ "Độ chắc: 85%") | Loại | Ở K4, nếu hệ thống so nhầm bản (mô tả hiện tại), con số vẫn cao, vì mô tả hiện tại khớp tag thật. Con số **che** đúng cái lỗi hệ thống mà §3 sợ nhất. Ở K5, "85% đúng mô tả" đọc như phán quyết nghiêng về shop, trong khi việc AI không làm được (kiểm thật/giả) không hiện ra ở đâu. Nhóm cũng không có dữ liệu nào để con số đó có nghĩa thật. |
+| **Một câu nói độ chắc trong lời AI** (ví dụ "Mình khá chắc là…") | Loại | Vẫn chỉ là lời AI tự nói về mình, người mua không kiểm được. Ở K5 câu kiểu này dễ bị nghe thành "AI bênh shop", đúng lỗi ngữ cảnh đã nêu ở §3. |
+| **Thẻ "Căn cứ AI đã so"** ở cột phải, tách khỏi khung chat | **Chọn** | Người mua và nhân viên **tự kiểm** được căn cứ, không phải tin AI (G11, PAIR Explainability & Trust). Thẻ đứng yên khi chat cuộn, nên lúc nào cũng nhìn thấy. |
+
+**Thẻ hiện khác nhau theo từng ca:**
+- **K4: hai phiên bản mô tả cạnh nhau (①).** Nhóm đã cân nhắc chỉ hiện bản lúc đặt cho gọn, nhưng loại, vì như thế việc shop sửa mô tả biến mất khỏi màn hình. Hiện cả hai, tô rõ bản dùng để so, thì nếu hệ thống so nhầm bản, người mua và nhân viên thấy ngay. Đây là lớp chặn thứ ba cho lỗi "sửa câu chữ không cứu được" ở §3.
+- **K5: bảng so từng mục và nhãn giới hạn (③).** Mỗi mục có ✓ riêng thay vì một kết luận chung "đúng mô tả". Thêm dòng *"Form / đường may: mô tả không đề cập"* để người mua thấy AI không bỏ qua ý của họ. Nhãn ③ nói cái AI **không** làm được, điều mà một con số % không nói được.
+- **Độ chắc được nói bằng hành động, không bằng con số.** Căn cứ rõ nhưng có tín hiệu cần người xét (K4) thì AI dừng kết luận và chuyển người. Căn cứ chưa đủ (K5) thì AI nói "chưa đủ căn cứ" (④) và đưa đường lui (⑤).
 
 #### Điều khiển mức tự chủ (B)
 _(chưa làm)_
